@@ -400,7 +400,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	/**
 	 * Execute the query and return the list of nodes as result
 	 *
-	 * @return array<\TYPO3\TYPO3CR\Domain\Model\NodeInterface>
+	 * @return array
 	 */
 	public function execute() {
 		$timeBefore = microtime(TRUE);
@@ -445,7 +445,10 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 			}
 			$node = $this->contextNode->getNode($nodePath);
 			if ($node instanceof NodeInterface) {
-				$nodes[$node->getIdentifier()] = $node;
+				$nodes[$node->getIdentifier()] = array(
+					'node' => $node,
+					'meta' => $hit
+				);
 				if ($this->limit > 0 && count($nodes) >= $this->limit) {
 					break;
 				}
@@ -456,7 +459,10 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 			$this->logger->log('Query Log (' . $this->logMessage . ') Number of returned results: ' . count($nodes), LOG_DEBUG);
 		}
 
-		return array_values($nodes);
+		return array(
+			'nodes' => array_values($nodes),
+			'response' => $response->getTreatedContent()
+		);
 	}
 
 	/**
