@@ -63,6 +63,13 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	protected $from;
 
 	/**
+	 * These fields are not accepted in a count request and must therefore be removed before doing so
+	 *
+	 * @var array
+	 */
+	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size');
+
+	/**
 	 * The ElasticSearch request, as it is being built up.
 	 * @var array
 	 */
@@ -379,7 +386,14 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 */
 	public function count() {
 		$timeBefore = microtime(TRUE);
-		$response = $this->elasticSearchClient->getIndex()->request('GET', '/_count', array(), json_encode($this->request));
+		$request = $this->request;
+		foreach ($this->unsupportedFieldsInCountRequest as $field) {
+			if (isset($request[$field])) {
+				unset($request[$field]);
+			}
+		}
+
+		$response = $this->elasticSearchClient->getIndex()->request('GET', '/_count', array(), json_encode($request));
 		$timeAfterwards = microtime(TRUE);
 
 		$count = $response->getTreatedContent()['count'];
@@ -422,7 +436,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 
 		//
 		// http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-terms-filter.html
-		$this->queryFilter('terms', array('__workspace' => array('live', $contextNode->getContext()->getWorkspace()->getName())));
+		$this->queryFilter('terms', array('__workspace' => array_unique(array('live', $contextNode->getContext()->getWorkspace()->getName()))));
 
 		$this->contextNode = $contextNode;
 
