@@ -279,15 +279,36 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 * @return ElasticSearchQueryBuilder
 	 */
 	public function appendAtPath($path, array $data) {
-		$currentElement =& $this->request;
+		$currentElement = &$this->request;
 		foreach (explode('.', $path) as $pathPart) {
 			if (!isset($currentElement[$pathPart])) {
 				throw new QueryBuildingException('The element at path "' . $path . '" was not an array (failed at "' . $pathPart . '").', 1383716367);
 			}
-			$currentElement =& $currentElement[$pathPart];
+			$currentElement = &$currentElement[$pathPart];
 		}
 		$currentElement[] = $data;
 
+		return $this;
+	}
+
+	/**
+	 * Add multiple filters to query.filtered.filter
+	 *
+	 * @param array $data An associative array of keys as variable names and values as variable values
+	 * @param string $clauseType one of must, should, must_not
+	 * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception\QueryBuildingException
+	 * @return ElasticSearchQueryBuilder
+	 */
+	public function queryFilterMultiple($data, $clauseType = 'must') {
+		foreach ($data as $key => $value) {
+			if ($value !== NULL) {
+				if (is_array($value)) {
+					$this->queryFilter('terms', array($key => $value), $clauseType);
+				} else {
+					$this->queryFilter('term', array($key => $value), $clauseType);
+				}
+			}
+		}
 		return $this;
 	}
 
