@@ -333,13 +333,10 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 */
 	public function getPreparedRequest() {
 		$request = $this->request;
-		$fulltext = array("exists" => array("field" => "__fulltext"));
+		$fulltext = array('exists' => array('field' => '__fulltext'));
 		if ($this->isFulltextSearch === TRUE) {
-			$clause = 'must';
-		} else {
-			$clause = 'must_not';
+			$request['query']['filtered']['filter']['bool']['must'][] = $fulltext;
 		}
-		$request['query']['filtered']['filter']['bool'][$clause][] = $fulltext;
 		return $request;
 	}
 
