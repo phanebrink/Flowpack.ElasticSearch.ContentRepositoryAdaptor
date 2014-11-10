@@ -72,7 +72,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 *
 	 * @var array
 	 */
-	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size');
+	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size', '_source', 'highlight');
 
 	/**
 	 * The ElasticSearch request, as it is being built up.
@@ -499,13 +499,34 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 * @return QueryBuilderInterface
 	 */
 	public function fulltext($searchWord) {
-
 		$this->appendAtPath('query.filtered.query.bool.must', array(
 			'query_string' => array(
 				'query' => $searchWord
 			)
 		));
 		$this->isFulltextSearch = TRUE;
+		return $this;
+	}
+
+	/**
+	 * Wrap search term matches found in the result for highlighting purposes. Only available for fulltext searches.
+	 *
+	 * @param integer $fragmentSize
+	 * @param integer $fragmentCount
+	 * @return QueryBuilderInterface
+	 */
+	public function highlight($fragmentSize = 150, $fragmentCount = 2) {
+		$this->request['_source'] = array('__fulltext');
+		$this->request['highlight'] = array(
+			'fields' => array(
+				'text' => array(
+					'force_source' => TRUE,
+					'fragment_size' => $fragmentSize,
+					'no_match_size' => $fragmentSize,
+					'number_of_fragments' => $fragmentCount
+				)
+			)
+		);
 		return $this;
 	}
 
