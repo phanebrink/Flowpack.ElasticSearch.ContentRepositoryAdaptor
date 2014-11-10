@@ -125,7 +125,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 						),
 					)
 				)
-			)
+			),
 		),
 		'fields' => array('__path')
 	);
@@ -453,13 +453,33 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 * @return QueryBuilderInterface
 	 */
 	public function fulltext($searchWord) {
-
 		$this->appendAtPath('query.filtered.query.bool.must', array(
 			'query_string' => array(
 				'query' => $searchWord
 			)
 		));
 		$this->isFulltextSearch = TRUE;
+		return $this;
+	}
+
+	/**
+	 * @param int $fragmentSize
+	 * @param int $fragmentCount
+	 * @return $this
+	 */
+	public function highlight($fragmentSize = 150, $fragmentCount = 2) {
+		$this->request['_source'] = array('__fulltext');
+		$this->request['highlight'] = array(
+			'fields' => array(
+				'text' => array(
+					'force_source' => true,
+					'fragment_size' => $fragmentSize,
+					'no_match_size' => $fragmentSize,
+					'number_of_fragments' => $fragmentCount
+				)
+			)
+		);
+
 		return $this;
 	}
 
