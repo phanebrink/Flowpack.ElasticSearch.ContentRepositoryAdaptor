@@ -72,7 +72,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 *
 	 * @var array
 	 */
-	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size');
+	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size', '_source', 'highlight');
 
 	/**
 	 * The ElasticSearch request, as it is being built up.
