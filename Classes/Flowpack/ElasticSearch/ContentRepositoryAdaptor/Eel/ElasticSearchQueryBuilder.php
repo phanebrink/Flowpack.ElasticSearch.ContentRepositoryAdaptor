@@ -1,7 +1,6 @@
 <?php
 namespace Flowpack\ElasticSearch\ContentRepositoryAdaptor\Eel;
 
-
 /*                                                                                                  *
  * This script belongs to the TYPO3 Flow package "Flowpack.ElasticSearch.ContentRepositoryAdaptor". *
  *                                                                                                  *
@@ -72,10 +71,11 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 *
 	 * @var array
 	 */
-	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size', '_source', 'highlight');
+	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size', '_source', 'highlight', 'aggregations');
 
 	/**
 	 * The ElasticSearch request, as it is being built up.
+	 *
 	 * @var array
 	 */
 	protected $request = array(
@@ -167,7 +167,6 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 		return $this;
 	}
 
-
 	/**
 	 * Sort ascending by $propertyName
 	 *
@@ -186,7 +185,6 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 
 		return $this;
 	}
-
 
 	/**
 	 * output only $limit records
@@ -208,7 +206,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 		$currentWorkspaceNestingLevel = 1;
 		$workspace = $this->contextNode->getContext()->getWorkspace();
 		while ($workspace->getBaseWorkspace() !== NULL) {
-			$currentWorkspaceNestingLevel ++;
+			$currentWorkspaceNestingLevel++;
 			$workspace = $workspace->getBaseWorkspace();
 		}
 
@@ -367,7 +365,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 		$hits = $response->getTreatedContent()['hits'];
 
 		if ($this->logThisQuery === TRUE) {
-			$this->logger->log('Query Log (' . $this->logMessage . '): ' . json_encode($request) . ' -- execution time: ' . (($timeAfterwards-$timeBefore)*1000) . ' ms -- Limit: ' . $this->limit . ' -- Number of results returned: ' . count($hits['hits']) . ' -- Total Results: ' . $hits['total'], LOG_DEBUG);
+			$this->logger->log('Query Log (' . $this->logMessage . '): ' . json_encode($request) . ' -- execution time: ' . (($timeAfterwards - $timeBefore) * 1000) . ' ms -- Limit: ' . $this->limit . ' -- Number of results returned: ' . count($hits['hits']) . ' -- Total Results: ' . $hits['total'], LOG_DEBUG);
 		}
 
 		if ($hits['total'] === 0) {
@@ -440,7 +438,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 		$count = $response->getTreatedContent()['count'];
 
 		if ($this->logThisQuery === TRUE) {
-			$this->logger->log('Query Log (' . $this->logMessage . '): ' . json_encode($request) . ' -- execution time: ' . (($timeAfterwards-$timeBefore)*1000) . ' ms -- Total Results: ' . $count, LOG_DEBUG);
+			$this->logger->log('Query Log (' . $this->logMessage . '): ' . json_encode($request) . ' -- execution time: ' . (($timeAfterwards - $timeBefore) * 1000) . ' ms -- Total Results: ' . $count, LOG_DEBUG);
 		}
 
 		return $count;
@@ -465,7 +463,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	/**
 	 * @param int $fragmentSize
 	 * @param int $fragmentCount
-	 * @return $this
+	 * @return QueryBuilderInterface
 	 */
 	public function highlight($fragmentSize = 150, $fragmentCount = 2) {
 		$this->request['_source'] = array('__fulltext');
@@ -476,6 +474,23 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 					'fragment_size' => $fragmentSize,
 					'no_match_size' => $fragmentSize,
 					'number_of_fragments' => $fragmentCount
+				)
+			)
+		);
+
+		return $this;
+	}
+
+	/**
+	 * @param string $field
+	 * @param string $type
+	 * @return QueryBuilderInterface
+	 */
+	public function aggregations($field, $type = 'terms') {
+		$this->request['aggregations'] = array(
+			'type' => array(
+				$type => array(
+					'field' => $field
 				)
 			)
 		);
@@ -504,7 +519,6 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 
 		return $this;
 	}
-
 
 	/**
 	 * All methods are considered safe
