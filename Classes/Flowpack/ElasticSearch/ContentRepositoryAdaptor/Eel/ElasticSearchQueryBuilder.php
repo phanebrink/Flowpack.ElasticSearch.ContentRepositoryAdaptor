@@ -72,7 +72,7 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	 *
 	 * @var array
 	 */
-	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size', '_source', 'highlight');
+	protected $unsupportedFieldsInCountRequest = array('fields', 'sort', 'from', 'size', '_source', 'highlight', 'aggregations');
 
 	/**
 	 * The ElasticSearch request, as it is being built up.
@@ -524,6 +524,24 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 					'fragment_size' => $fragmentSize,
 					'no_match_size' => $fragmentSize,
 					'number_of_fragments' => $fragmentCount
+				)
+			)
+		);
+		return $this;
+	}
+
+	/**
+	 * Add aggregates to the result.
+	 *
+	 * @param string $field
+	 * @param string $type
+	 * @return QueryBuilderInterface
+	 */
+	public function aggregations($field, $type = 'terms') {
+		$this->request['aggregations'] = array(
+			'type' => array(
+				$type => array(
+					'field' => $field
 				)
 			)
 		);
