@@ -3,9 +3,7 @@
   search:
     fulltext:
       enable: true
-
   properties:
-
     '__identifier':
       search:
         elasticSearchMapping:
@@ -87,12 +85,19 @@
           format: 'date_time_no_millis'
         indexing: '${(node.hiddenAfterDateTime ? Date.format(node.hiddenAfterDateTime, "Y-m-d\TH:i:s") + "Z" : null)}'
 
-
 'TYPO3.Neos:Document':
   search:
     fulltext:
       isRoot: true
   properties:
+    title:
+      search:
+        fulltextExtractor: '${Indexing.extractHtmlTags(value)}'
+        indexing: '${value}'
+        elasticSearchMapping:
+          type: string
+          include_in_all: true
+
     '__fulltextParts':
       search:
         elasticSearchMapping:
@@ -106,6 +111,7 @@
         indexing: ''
         elasticSearchMapping:
           type: object
+          include_in_all: true
           properties:
             'h1':
               type: string
@@ -136,14 +142,32 @@
               include_in_all: true
               boost: 1
 
-'TYPO3.Neos.NodeTypes:Text':
+'TYPO3.Neos.NodeTypes:TitleMixin':
+  properties:
+    'title':
+      search:
+        fulltextExtractor: '${Indexing.extractHtmlTags(value)}'
+
+'TYPO3.Neos.NodeTypes:TextMixin':
   properties:
     'text':
       search:
         fulltextExtractor: '${Indexing.extractHtmlTags(value)}'
 
-'TYPO3.Neos.NodeTypes:Headline':
+'TYPO3.Neos.NodeTypes:Html':
   properties:
-    'title':
+    'source':
+      search:
+        fulltextExtractor: '${Indexing.extractHtmlTags(value)}'
+
+'TYPO3.Neos.NodeTypes:ContentImageMixin':
+  properties:
+    'image':
+      search:
+        fulltextExtractor: '${Indexing.extractHtmlTags(node.properties.alternativeText + " " + node.properties.title)}'
+
+'TYPO3.Neos.NodeTypes:ImageCaptionMixin':
+  properties:
+    'caption':
       search:
         fulltextExtractor: '${Indexing.extractHtmlTags(value)}'

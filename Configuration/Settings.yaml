@@ -42,7 +42,6 @@ TYPO3:
             format: 'date_time_no_millis'
             include_in_all: false
 
-
         'TYPO3\Media\Domain\Model\Video':
           elasticSearchMapping: '' # deliberately don't map or index this
 
