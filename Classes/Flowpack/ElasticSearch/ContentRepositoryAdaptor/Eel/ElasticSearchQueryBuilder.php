@@ -400,9 +400,10 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 	/**
 	 * Execute the query and return the list of nodes as result
 	 *
+	 * @param boolean $returnMetaData Changes the return format to return an array including the response and metadata for each result node
 	 * @return array
 	 */
-	public function execute() {
+	public function execute($returnMetaData = FALSE) {
 		$timeBefore = microtime(TRUE);
 		$request = $this->getPreparedRequest();
 		$response = $this->elasticSearchClient->getIndex()->request('GET', '/_search', array(), json_encode($request));
@@ -445,10 +446,15 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 			}
 			$node = $this->contextNode->getNode($nodePath);
 			if ($node instanceof NodeInterface) {
-				$nodes[$node->getIdentifier()] = array(
-					'node' => $node,
-					'meta' => $hit
-				);
+				if ($returnMetaData) {
+					$nodes[$node->getIdentifier()] = array(
+						'node' => $node,
+						'meta' => $hit
+					);
+				} else {
+					$nodes[$node->getIdentifier()] = $node;
+				}
+
 				if ($this->limit > 0 && count($nodes) >= $this->limit) {
 					break;
 				}
@@ -459,10 +465,15 @@ class ElasticSearchQueryBuilder implements QueryBuilderInterface, ProtectedConte
 			$this->logger->log('Query Log (' . $this->logMessage . ') Number of returned results: ' . count($nodes), LOG_DEBUG);
 		}
 
-		return array(
-			'nodes' => array_values($nodes),
-			'response' => $response->getTreatedContent()
-		);
+		if ($returnMetaData) {
+			return array(
+				'nodes' => array_values($nodes),
+				'response' => $response->getTreatedContent()
+			);
+		} else {
+			return array_values($nodes);
+		}
+
 	}
 
 	/**
